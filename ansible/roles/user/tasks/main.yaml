@@ -1,0 +1,11 @@
+# Create k8 admin group
+- name: Create kubernetes admin group {{k8s_admin_group}}
+  group:
+    name: "{{ k8s_admin_group }}"
+    state: present
+
+- name: Add user {{ k8s_admin_user }} to kubernetes admin group
+  user:
+    name: "{{ k8s_admin_user }}"
+    groups: "{{k8s_admin_group}}"
+    append: yes

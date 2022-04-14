@@ -1,0 +1,31 @@
+- hosts: all
+  become: yes
+  roles:
+    - user
+
+- hosts: loadbalancer
+  become: yes
+  roles:
+    - loadbalancer
+
+# For parallel provisioning
+- hosts: k8s_servers
+  become: yes
+  roles:
+    - k8/common
+
+- hosts: k8s_primary_control_plane
+  become: yes
+  roles:
+    - k8/masters/primary
+    - ingress
+
+- hosts: k8s_other_control_planes
+  become: yes
+  roles:
+    - k8/masters/others
+
+- hosts: k8s_nodes
+  become: yes
+  roles:
+    - k8/nodes

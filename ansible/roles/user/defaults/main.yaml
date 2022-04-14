@@ -1,0 +1,2 @@
+k8s_admin_group: "k8-admin"
+k8s_admin_user: "vagrant"

@@ -1,0 +1,45 @@
+---
+# Primary Controller Only
+- name: PRIMARY-CONTROL-PLANE | Configure  controller
+  command: "kubeadm init --skip-phases addon/kube-proxy --pod-network-cidr {{ k8s_pod_network_cidr }} --control-plane-endpoint {{ k8s_conrol_plane_address }} --apiserver-advertise-address={{public_ip}} --upload-certs"
+  args:
+    creates: "etc/kubernetes/manifests/kube-apiserver.yaml"
+
+# Configure .kube/config for k8s_admin_user
+- import_role:
+    name: k8/masters/common
+
+- name: PRIMARY-CONTROL-PLANE | Add cilium helm repo
+  become: false
+  command: "helm repo add cilium https://helm.cilium.io/"
+
+- name: PRIMARY-CONTROL-PLANE | Install cilium
+  become: false
+  command: "helm install cilium cilium/cilium --version {{cilium_version }}  \
+    --namespace=kube-system \
+    --set ipam.mode=kubernetes \
+    --set k8s.requireIPv4PodCIDR=true \
+    --set ipam.operator.clusterPoolIPv4PodCIDRList={{k8s_pod_network_cidr}}
+    --set kubeProxyReplacement=strict \
+    --set k8sServiceHost={{ public_ip }} \
+    --set k8sServicePort=6443"
+
+- name: PRIMARY-CONTROL-PLANE | Create a new certificate key
+  command: kubeadm init phase upload-certs --upload-certs
+  register: join_certificate_key
+
+- name: PRIMARY-CONTROL-PLANE | Generate join command for masters
+  command: kubeadm token create --print-join-command --certificate-key "{{ join_certificate_key.stdout_lines[2] }}"
+  register: join_master_command
+
+- name: PRIMARY-CONTROL-PLANE | Copy master join command to local file
+  become: false
+  local_action: copy content="{{ join_master_command.stdout_lines[0] }} --apiserver-advertise-address" dest="./{{ k8s_cluster_name }}-master-join-command"
+
+- name: PRIMARY-CONTROL-PLANE | Generate join command for nodes
+  command: kubeadm token create --print-join-command
+  register: node_join_command
+
+- name: PRIMARY-CONTROL-PLANE | Copy join command for {{k8s_cluster_name}} cluster to local file
+  become: false
+  local_action: copy content="{{node_join_command.stdout_lines[0]}}" dest="./{{k8s_cluster_name}}-node-join-command"

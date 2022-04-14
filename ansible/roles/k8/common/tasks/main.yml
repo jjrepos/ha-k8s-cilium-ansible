@@ -1,0 +1,55 @@
+---
+- name: K8S-COMMON | Remove current swaps from fstab
+  lineinfile:
+    dest: /etc/fstab
+    regexp: '^/[\S]+\s+none\s+swap '
+    state: absent
+
+- name: K8S-COMMON | Disable swap
+  command: swapoff -a
+  when: ansible_swaptotal_mb > 0
+
+- name: K8S-COMMON | Load container runtime kernel modules
+  community.general.modprobe:
+    name: "{{item.name}}"
+    state: present
+  loop: "{{container_runtime_modules}}"
+
+- name: K8S-COMMON | Configure kubernetes kernel params using sysctl
+  sysctl:
+    name: "{{item.name}}"
+    value: "{{item.value}}"
+    state: present
+    reload: yes
+  loop: "{{container_runtime_sysctl}}"
+
+- name: K8S-COMMON | Configure containerd.conf
+  template:
+    src: etc/containerd/config.toml
+    dest: /etc/containerd/config.toml
+  notify: restart containerd
+
+# Edit Kublet systemd service file to add node ip
+- name: K8S-COMMON | Configure node-ip {{ public_ip }} at kubelet
+  lineinfile:
+    path: "/etc/systemd/system/kubelet.service.d/10-kubeadm.conf"
+    line: 'Environment="KUBELET_EXTRA_ARGS=--node-ip={{ public_ip }}"'
+    regexp: "KUBELET_EXTRA_ARGS="
+    insertafter: '\[Service\]'
+    state: present
+  notify: restart kubelet
+
+- name: K8S-COMMON | restart containerd
+  service:
+    name: containerd
+    state: restarted
+    daemon_reload: yes
+
+- name: K8S-COMMON | Delete configuration for containerd.conf as kubeadm is unable to detect containerd (see https://github.com/containerd/containerd/issues/4581)
+  file:
+    state: absent
+    path: /etc/containerd/config.toml
+
+# Trigger handlers
+- name: K8S-COMMON | Restart services if needed
+  meta: flush_handlers

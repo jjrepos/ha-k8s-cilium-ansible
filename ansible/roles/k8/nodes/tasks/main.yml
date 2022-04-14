@@ -1,0 +1,12 @@
+---
+# tasks file for k8/node
+- name: NODE | Copy the join command to {{k8s_cluster_name}} cluster
+  copy:
+    src: "./{{k8s_cluster_name}}-node-join-command"
+    dest: "/home/{{k8s_admin_user}}/{{k8s_cluster_name}}-node-join-command"
+    owner: "{{k8s_admin_user}}"
+    group: "{{k8s_admin_user}}"
+    mode: 0760
+
+- name: NODE | Join node {{k8s_node_name}} to the cluster
+  command: "sh /home/{{k8s_admin_user}}/{{k8s_cluster_name}}-node-join-command"

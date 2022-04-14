@@ -1,0 +1,31 @@
+---
+- name: K8-MASTERS-COMMON  | Create .kube directory for {{k8s_admin_user}} user
+  file:
+    path: "/home/{{k8s_admin_user}}/.kube"
+    state: directory
+    owner: "{{k8s_admin_user}}"
+    group: "{{k8s_admin_group}}"
+    mode: "0750"
+
+- name: K8-MASTERS-COMMON  | Copy kube config to {{k8s_admin_user}} home .kube directory
+  copy:
+    src: "/etc/kubernetes/admin.conf"
+    dest: "/home/{{k8s_admin_user}}/.kube/config"
+    remote_src: yes
+    owner: "{{k8s_admin_user}}"
+    group: "{{k8s_admin_group}}"
+    mode: 0660
+
+- name: K8-MASTERS-COMMON | Change ownership of /etc/kubernetes/ directory to {{k8s_admin_group}}
+  file:
+    path: "/etc/kubernetes"
+    state: directory
+    recurse: yes
+    owner: "{{k8s_admin_user}}"
+    group: "{{k8s_admin_group}}"
+
+- name: K8-MASTERS-COMMON | Download and extract Cilium binary
+  unarchive:
+    src: "https://github.com/cilium/cilium-cli/releases/latest/download/cilium-linux-amd64.tar.gz"
+    dest: "/usr/bin"
+    remote_src: yes

@@ -1,0 +1,11 @@
+---
+- name: LOADBALANCER | Install haproxy
+  package:
+    name: haproxy
+    state: present
+
+- name: LOADBALANCER | Copy Haproxy configuration to /etc/haproxy/haproxy.cfg
+  template:
+    src: haproxy.cfg.j2
+    dest: "/etc/haproxy/haproxy.cfg"
+  notify: Restart haproxy

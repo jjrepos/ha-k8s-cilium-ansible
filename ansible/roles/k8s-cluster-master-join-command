@@ -1,0 +1,1 @@
+kubeadm join 192.168.56.9:6443 --token 20072y.wc4yhas0vwwsiz6w --discovery-token-ca-cert-hash sha256:0efd8eae706b1d4c60c5f8a83da222d62bad804b1915a10f7abebe45ca09d98a --control-plane --certificate-key d78f5c8f3532776e24ca5e819d3d3295b484bc41d12d7a4f942585356be8c370 --apiserver-advertise-address

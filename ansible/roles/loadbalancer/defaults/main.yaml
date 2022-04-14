@@ -1,0 +1,10 @@
+loadbalancer_ip: "192.168.56.9"
+loadbalancer_port: "6443"
+lb_admin_user: "vagrant"
+lb_admin_group: "k8admin"
+
+package_names:
+  - package: apt-transport-https
+  - package: ca-certificates
+  - package: software-properties-common
+  - package: curl

@@ -1,0 +1,16 @@
+---
+- name: INGRESS | Add Traefik ingress repo
+  become: false
+  command: helm repo add traefik https://helm.traefik.io/traefik
+
+- name: INGRESS | update repo
+  become: false
+  command: helm repo update
+
+- name: INGRESS | Create treafik namespace
+  become: false
+  command: kubectl create namespace traefik
+
+- name: INGRESS | Install Traefik ingress
+  become: false
+  command: helm install traefik traefik/traefik  --namespace=traefik

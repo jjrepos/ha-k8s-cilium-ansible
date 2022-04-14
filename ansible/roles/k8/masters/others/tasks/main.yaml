@@ -1,0 +1,24 @@
+# Other Controllers
+- name: OTHER-CONTROL-PLANES | Copy {{ k8s_cluster_name }}-master-join-command
+  copy:
+    src: "./{{ k8s_cluster_name }}-master-join-command"
+    dest: "/home/{{k8s_admin_user}}/{{ k8s_cluster_name }}-master-join-command"
+    owner: "{{k8s_admin_user}}"
+    group: "{{k8s_admin_group}}"
+    mode: 0760
+
+- name: OTHER-CONTROL-PLANES | Add --apiserver-advertise-address to {{ k8s_cluster_name }}-master-join-command
+  lineinfile:
+    path: "/home/{{k8s_admin_user}}/{{ k8s_cluster_name }}-master-join-command"
+    backrefs: yes
+    regexp: "^(.*--apiserver-advertise-address$)"
+    line: '\1={{public_ip}}'
+
+- name: OTHER-CONTROL-PLANES | Join master to the cluster
+  command: "sh /home/{{k8s_admin_user}}/{{ k8s_cluster_name }}-master-join-command"
+  args:
+    creates: "etc/kubernetes/manifests/kube-apiserver.yaml"
+
+# Configure .kube/config for k8s_admin_user
+- import_role:
+    name: k8/masters/common

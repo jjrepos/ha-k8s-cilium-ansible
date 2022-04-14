@@ -1,0 +1,33 @@
+#https://kubernetes.io/docs/setup/production-environment/container-runtimes/#cri-o
+k8_version: "1.23"
+os_version: "Ubuntu_20.04"
+
+package_keys:
+  - key: "https://download.docker.com/linux/ubuntu/gpg"
+  - key: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+
+package_repositories:
+  - repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ansible_distribution_release}} stable"
+  - repo: "deb https://apt.kubernetes.io/ kubernetes-xenial main" #k8s not available for focal (Ubuntu 20.4)
+
+package_names:
+  - package: apt-transport-https
+  - package: ca-certificates
+  - package: software-properties-common
+  - package: curl
+  - package: containerd.io
+  - package: kubeadm
+  - package: kubelet
+  - package: kubectl
+
+container_runtime_modules:
+  - name: overlay
+  - name: br_netfilter
+
+container_runtime_sysctl:
+  - name: net.bridge.bridge-nf-call-iptables
+    value: 1
+  - name: net.ipv4.ip_forward
+    value: 1
+  - name: net.bridge.bridge-nf-call-ip6tables
+    value: 1

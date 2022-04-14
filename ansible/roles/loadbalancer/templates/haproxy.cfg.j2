@@ -1,0 +1,33 @@
+global
+  log /dev/log  local0
+  log /dev/log  local1 notice
+  stats socket /var/lib/haproxy/stats level admin
+  chroot /var/lib/haproxy
+  user haproxy
+  group haproxy
+  daemon
+
+defaults
+  log global
+  mode  http
+  option  httplog
+  option  dontlognull
+        timeout connect 5000
+        timeout client 50000
+        timeout server 50000
+
+frontend kubernetes
+    bind {{loadbalancer_ip}}:{{loadbalancer_port}}
+    option tcplog
+    mode tcp
+    default_backend kubernetes-master-nodes
+
+backend kubernetes-master-nodes
+    mode tcp
+    balance roundrobin
+    option tcp-check
+    {% for master in groups['k8s_masters'] %}
+    server {{ hostvars[master].host_name }} {{ hostvars[master].public_ip }}:6443 check fall 3 rise 2
+    {% endfor %}
+
+
